@@ -34,13 +34,13 @@ import at.huber.youtubeExtractor.YtFile;
 public class MainActivity extends AppCompatActivity {
     private EditText et_search;
     private Button button_download,btn_popup;
-    private String newLink;
+    private String newLink,selectedImagePath,filemanagerstring;
     private static final int STORAGE_REQUEST_CODE = 1;
     private String[] permission = {Manifest.permission.READ_EXTERNAL_STORAGE,
             Manifest.permission
                     .WRITE_EXTERNAL_STORAGE,  Manifest.permission.INTERNET};
     ProgressDialog dialog;
-
+    public static final int REQUEST_TAKE_GALLERY_VIDEO = 1;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -136,6 +136,12 @@ public class MainActivity extends AppCompatActivity {
                                 button_download.setVisibility(View.VISIBLE);
                                 btn_popup.setVisibility(View.GONE);
                                 OtherMethod();
+                                break;
+                            case R.id.tomp3:
+                                Intent intent = new Intent();
+                                intent.setType("video/*");
+                                intent.setAction(Intent.ACTION_GET_CONTENT);
+                                startActivityForResult(Intent.createChooser(intent,"Select Video"),REQUEST_TAKE_GALLERY_VIDEO);
                                 break;
 
                         }
@@ -264,5 +270,39 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT).show();
             }
         }
+    }
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (resultCode == RESULT_OK) {
+            if (requestCode == REQUEST_TAKE_GALLERY_VIDEO) {
+                Uri selectedImageUri = data.getData();
+
+                // OI FILE Manager
+                filemanagerstring = selectedImageUri.getPath();
+
+                // MEDIA GALLERY
+                selectedImagePath = getPath(selectedImageUri);
+                log.d("Tarang","Path"+selectedImagePath);
+               /* if (selectedImagePath != null) {
+
+                    Intent intent = new Intent(HomeActivity.this,
+                            VideoplayAvtivity.class);
+                    intent.putExtra("path", selectedImagePath);
+                    startActivity(intent);
+                }*/
+            }
+        }
+    }
+    public String getPath(Uri uri) {
+        String[] projection = { MediaStore.Video.Media.DATA };
+        Cursor cursor = getContentResolver().query(uri, projection, null, null, null);
+        if (cursor != null) {
+            // HERE YOU WILL GET A NULLPOINTER IF CURSOR IS NULL
+            // THIS CAN BE, IF YOU USED OI FILE MANAGER FOR PICKING THE MEDIA
+            int column_index = cursor
+                    .getColumnIndexOrThrow(MediaStore.Video.Media.DATA);
+            cursor.moveToFirst();
+            return cursor.getString(column_index);
+        } else
+            return null;
     }
 }
