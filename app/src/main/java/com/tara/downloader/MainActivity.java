@@ -1,6 +1,7 @@
 package com.tara.downloader;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -12,10 +13,14 @@ import android.app.DownloadManager;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.MediaStore;
+import android.util.Log;
 import android.util.SparseArray;
 import android.view.MenuItem;
 import android.view.View;
@@ -27,20 +32,23 @@ import android.widget.Toast;
 import com.ashudevs.instagramextractor.InstagramExtractor;
 import com.ashudevs.instagramextractor.InstagramFile;
 
+import java.io.IOException;
+
 import at.huber.youtubeExtractor.VideoMeta;
 import at.huber.youtubeExtractor.YouTubeExtractor;
 import at.huber.youtubeExtractor.YtFile;
 
 public class MainActivity extends AppCompatActivity {
     private EditText et_search;
-    private Button button_download,btn_popup;
-    private String newLink,selectedImagePath,filemanagerstring;
+    private Button button_download, btn_popup;
+    private String newLink, selectedVideoPath, filemanagerstring;
     private static final int STORAGE_REQUEST_CODE = 1;
     private String[] permission = {Manifest.permission.READ_EXTERNAL_STORAGE,
             Manifest.permission
-                    .WRITE_EXTERNAL_STORAGE,  Manifest.permission.INTERNET};
+                    .WRITE_EXTERNAL_STORAGE, Manifest.permission.INTERNET};
     ProgressDialog dialog;
     public static final int REQUEST_TAKE_GALLERY_VIDEO = 1;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -48,32 +56,32 @@ public class MainActivity extends AppCompatActivity {
         initUi();
         getClickonPopUp();
     }
-    private void youtubeMethod(){
+
+    private void youtubeMethod() {
         button_download.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(ContextCompat.checkSelfPermission(MainActivity.this,Manifest.permission.READ_EXTERNAL_STORAGE
-                )   == PackageManager.PERMISSION_GRANTED){
+                if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE
+                ) == PackageManager.PERMISSION_GRANTED) {
                     String Url = et_search.getText().toString().trim();
-                    if(Url.isEmpty()){
+                    if (Url.isEmpty()) {
                         Toast.makeText(MainActivity.this, "Url is required", Toast.LENGTH_SHORT).show();
-                    }else{
+                    } else {
                         dialog = new ProgressDialog(MainActivity.this);
                         dialog.setTitle("Wait for a moment");
                         dialog.setMessage("Please wait...");
                         dialog.setCancelable(false);
                         dialog.show();
-                        new YouTubeExtractor(MainActivity.this){
+                        new YouTubeExtractor(MainActivity.this) {
                             @SuppressLint("StaticFieldLeak")
                             @Override
                             protected void onExtractionComplete(SparseArray<YtFile> ytFiles, VideoMeta videoMeta) {
-                                try{
+                                try {
                                     if (ytFiles != null) {
-                                        YtFile   ytFile = ytFiles.get(22);
+                                        YtFile ytFile = ytFiles.get(22);
                                         downloadFromUrl(ytFile.getUrl(), videoMeta.getTitle());
                                     }
-                                }
-                                catch (NullPointerException e){
+                                } catch (NullPointerException e) {
                                     e.printStackTrace();
                                     Toast.makeText(MainActivity.this, "please try again", Toast.LENGTH_SHORT).show();
                                     dialog.dismiss();
@@ -85,18 +93,19 @@ public class MainActivity extends AppCompatActivity {
                         }.extract(Url, true, false);
                     }
 
-                }else{
+                } else {
                     requestStoragePermission();
                 }
 
             }
         });
     }
+
     private void downloadFromUrl(String url, String title) {
         DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
         request.setTitle(title);
-        request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS,title+".mp4");
-        DownloadManager downloadManager = (DownloadManager)getSystemService(Context.DOWNLOAD_SERVICE);
+        request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, title + ".mp4");
+        DownloadManager downloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
         request.allowScanningByMediaScanner();
         request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
         request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI | DownloadManager.Request.NETWORK_MOBILE);
@@ -113,12 +122,12 @@ public class MainActivity extends AppCompatActivity {
         btn_popup.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                PopupMenu popupMenu = new PopupMenu(MainActivity.this,btn_popup);
-                popupMenu.getMenuInflater().inflate(R.menu.popup_menu,popupMenu.getMenu());
+                PopupMenu popupMenu = new PopupMenu(MainActivity.this, btn_popup);
+                popupMenu.getMenuInflater().inflate(R.menu.popup_menu, popupMenu.getMenu());
                 popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                     @Override
                     public boolean onMenuItemClick(MenuItem item) {
-                        switch (item.getItemId()){
+                        switch (item.getItemId()) {
                             case R.id.youtube:
                                 et_search.setVisibility(View.VISIBLE);
                                 button_download.setVisibility(View.VISIBLE);
@@ -138,10 +147,12 @@ public class MainActivity extends AppCompatActivity {
                                 OtherMethod();
                                 break;
                             case R.id.tomp3:
-                                Intent intent = new Intent();
+                                Intent i = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Video.Media.EXTERNAL_CONTENT_URI);
+                                startActivityForResult(i, REQUEST_TAKE_GALLERY_VIDEO);
+                               /* Intent intent = new Intent();
                                 intent.setType("video/*");
                                 intent.setAction(Intent.ACTION_GET_CONTENT);
-                                startActivityForResult(Intent.createChooser(intent,"Select Video"),REQUEST_TAKE_GALLERY_VIDEO);
+                                startActivityForResult(Intent.createChooser(intent, "Select Video"), REQUEST_TAKE_GALLERY_VIDEO);*/
                                 break;
 
                         }
@@ -157,21 +168,21 @@ public class MainActivity extends AppCompatActivity {
         button_download.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(ContextCompat.checkSelfPermission(MainActivity.this,Manifest.permission.READ_EXTERNAL_STORAGE
-                )   == PackageManager.PERMISSION_GRANTED){
+                if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE
+                ) == PackageManager.PERMISSION_GRANTED) {
                     String Url = et_search.getText().toString().trim();
-                    if(Url.isEmpty()){
+                    if (Url.isEmpty()) {
                         Toast.makeText(MainActivity.this, "Url is required", Toast.LENGTH_SHORT).show();
-                    }else{
+                    } else {
                         dialog = new ProgressDialog(MainActivity.this);
                         dialog.setTitle("Wait for a moment");
                         dialog.setMessage("Please wait...");
                         dialog.setCancelable(false);
                         dialog.show();
-                        downloadFromUrl(Url,"Url");
+                        downloadFromUrl(Url, "Url");
 
                     }
-                }else{
+                } else {
                     requestStoragePermission();
                 }
 
@@ -180,15 +191,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void requestStoragePermission() {
-        if(ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,Manifest.permission.READ_EXTERNAL_STORAGE)){
+        if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
             new AlertDialog.Builder(MainActivity.this)
                     .setTitle("Permission needed")
                     .setMessage("This permission is needed because of this and that")
                     .setPositiveButton("Okay", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            ActivityCompat.requestPermissions(MainActivity.this,new String[] {Manifest.permission.WRITE_EXTERNAL_STORAGE,Manifest.permission
-                                    .WRITE_EXTERNAL_STORAGE,Manifest.permission.INTERNET},STORAGE_REQUEST_CODE);
+                            ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission
+                                    .WRITE_EXTERNAL_STORAGE, Manifest.permission.INTERNET}, STORAGE_REQUEST_CODE);
                         }
                     }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                 @Override
@@ -196,38 +207,38 @@ public class MainActivity extends AppCompatActivity {
                     dialog.dismiss();
                 }
             }).create().show();
-        }else {
-            ActivityCompat.requestPermissions(MainActivity.this,new String[] {Manifest.permission.WRITE_EXTERNAL_STORAGE,
+        } else {
+            ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE,
                     Manifest.permission
-                            .WRITE_EXTERNAL_STORAGE,Manifest.permission.INTERNET},STORAGE_REQUEST_CODE);
+                            .WRITE_EXTERNAL_STORAGE, Manifest.permission.INTERNET}, STORAGE_REQUEST_CODE);
         }
     }
+
     private void instagramMethod() {
 
         button_download.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(ContextCompat.checkSelfPermission(MainActivity.this,Manifest.permission.READ_EXTERNAL_STORAGE)  == PackageManager.PERMISSION_GRANTED){
+                if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
                     String Url = et_search.getText().toString().trim();
-                    if(Url.isEmpty()){
+                    if (Url.isEmpty()) {
                         Toast.makeText(MainActivity.this, "Url is required", Toast.LENGTH_SHORT).show();
-                    }else{
+                    } else {
                         dialog = new ProgressDialog(MainActivity.this);
                         dialog.setTitle("Wait for a moment");
                         dialog.setMessage("Please wait...");
                         dialog.setCancelable(false);
                         dialog.show();
-                        new InstagramExtractor()
-                        {
+                        new InstagramExtractor() {
                             @Override
                             protected void onExtractionComplete(InstagramFile vimeoFile) {
-                                if(vimeoFile != null){
+                                if (vimeoFile != null) {
                                     String title = "Video is downloading !!";
                                     String link = vimeoFile.getUrl();
                                     DownloadManager.Request request = new DownloadManager.Request(Uri.parse(link));
                                     request.setTitle(title);
-                                    request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS,title+".mp4");
-                                    DownloadManager downloadManager = (DownloadManager)getSystemService(Context.DOWNLOAD_SERVICE);
+                                    request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, title + ".mp4");
+                                    DownloadManager downloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
                                     request.allowScanningByMediaScanner();
                                     request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
                                     request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI | DownloadManager.Request.NETWORK_MOBILE);
@@ -249,60 +260,57 @@ public class MainActivity extends AppCompatActivity {
                         }.Extractor(MainActivity.this, Url);
 
                     }
-                }else{
+                } else {
                     requestStoragePermission();
                 }
 
             }
         });
     }
+
     private void initUi() {
         et_search = (EditText) findViewById(R.id.et_search);
         button_download = (Button) findViewById(R.id.button_download);
-        btn_popup = (Button)findViewById(R.id.btn_popup);
+        btn_popup = (Button) findViewById(R.id.btn_popup);
     }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if(requestCode == STORAGE_REQUEST_CODE){
-            if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+        if (requestCode == STORAGE_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Toast.makeText(this, "Permission granted", Toast.LENGTH_SHORT).show();
-            }else{
+            } else {
                 Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT).show();
             }
         }
     }
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK) {
             if (requestCode == REQUEST_TAKE_GALLERY_VIDEO) {
-                Uri selectedImageUri = data.getData();
-
-                // OI FILE Manager
-                filemanagerstring = selectedImageUri.getPath();
-
-                // MEDIA GALLERY
-                selectedImagePath = getPath(selectedImageUri);
-                log.d("Tarang","Path"+selectedImagePath);
-               /* if (selectedImagePath != null) {
-
-                    Intent intent = new Intent(HomeActivity.this,
-                            VideoplayAvtivity.class);
-                    intent.putExtra("path", selectedImagePath);
-                    startActivity(intent);
-                }*/
+                selectedVideoPath = getPath(data.getData());
+                if(selectedVideoPath == null) {
+                    Toast.makeText(this, "empty"+requestCode, Toast.LENGTH_SHORT).show();
+                } else {
+                    Log.d("Tarang", "onActivityResult: "+selectedVideoPath);
+                }
             }
         }
+       // finish();
     }
+
+
     public String getPath(Uri uri) {
-        String[] projection = { MediaStore.Video.Media.DATA };
-        Cursor cursor = getContentResolver().query(uri, projection, null, null, null);
-        if (cursor != null) {
-            // HERE YOU WILL GET A NULLPOINTER IF CURSOR IS NULL
-            // THIS CAN BE, IF YOU USED OI FILE MANAGER FOR PICKING THE MEDIA
-            int column_index = cursor
-                    .getColumnIndexOrThrow(MediaStore.Video.Media.DATA);
+        String[] projection = { MediaStore.Images.Media.DATA };
+        Cursor cursor = managedQuery(uri, projection, null, null, null);
+        if(cursor!=null) {
+            int column_index = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DATA);
             cursor.moveToFirst();
+            Log.d("Tarang", "getPath: "+cursor.getString(column_index));
             return cursor.getString(column_index);
-        } else
-            return null;
+        }
+        else return null;
     }
 }
