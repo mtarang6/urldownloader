@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#59000000"
+    tools:context=".MainActivity">
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/btn_popup"
+        android:layout_margin="30dp"
+        android:layout_gravity="center"
+        android:text="Choose Platform"
+        android:textColor="@color/black"
+        android:textSize="20sp"
+        android:textStyle="italic"/>
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/et_search"
+        android:visibility="gone"
+        android:hint="Enter url"/>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Download"
+        android:visibility="gone"
+        android:id="@+id/button_download"
+        android:textColor="@color/black"/>
+</LinearLayout>
