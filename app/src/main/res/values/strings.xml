@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">UrlDownloader</string>
+    <string name="client_id">810343823005315</string>
+    <string name="callback_url">https://instagram.com/</string>
+    <string name="base_url">https://api.instagram.com/</string>
+    <string name="get_user_info_url">
+https://api.instagram.com/v1/users/self/?access_token=
+</string>
 </resources>

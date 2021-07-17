@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Gradle: com.github.Ashusolanki:InstagramExtractor:0.0.1@aar">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/caches/transforms-2/files-2.1/74f0d6e2801643980755d020fba4406f/jetified-InstagramExtractor-0.0.1/jars/classes.jar!/" />
+      <root url="file://$USER_HOME$/caches/transforms-2/files-2.1/74f0d6e2801643980755d020fba4406f/jetified-InstagramExtractor-0.0.1/res" />
+      <root url="file://$USER_HOME$/caches/transforms-2/files-2.1/74f0d6e2801643980755d020fba4406f/jetified-InstagramExtractor-0.0.1/AndroidManifest.xml" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/caches/modules-2/files-2.1/com.github.Ashusolanki/InstagramExtractor/0.0.1/a4c5087dd6c8d65b98783e65865d8b27685d76a6/InstagramExtractor-0.0.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

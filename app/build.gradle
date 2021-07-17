@@ -27,7 +27,9 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
 }
-
+android {
+    useLibrary 'org.apache.http.legacy'
+}
 dependencies {
 
     implementation 'androidx.appcompat:appcompat:1.2.0'
@@ -38,4 +40,5 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
     implementation 'com.github.HaarigerHarald:android-youtubeExtractor:master-SNAPSHOT'
     implementation 'com.github.Ashusolanki:InstagramExtractor:0.0.1'
+    implementation 'com.squareup.picasso:picasso:2.71828'
 }
